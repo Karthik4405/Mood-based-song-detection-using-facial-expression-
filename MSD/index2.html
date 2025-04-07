@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facial Expression Mood Song Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #8e2de2, #4a00e0);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 550px;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 26px;
+            color: #ffffff;
+        }
+        
+        .subtitle {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .input-section {
+            margin-bottom: 25px;
+        }
+        
+        .camera-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .camera-container {
+            position: relative;
+            width: 320px;
+            height: 240px;
+            margin: 0 auto 15px;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #1a1a1a;
+        }
+        
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror the video */
+        }
+        
+        #canvas {
+            display: none;
+        }
+        
+        .camera-status {
+            text-align: center;
+            height: 24px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .detected-mood {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .detected-mood-value {
+            margin-left: 8px;
+            font-weight: bold;
+            color: #ffcc00;
+        }
+        
+        h2 {
+            margin-bottom: 15px;
+            font-size: 20px;
+            color: #e0e0e0;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .text-input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        .text-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .mood-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .mood-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .mood-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .selected {
+            background-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .camera-btn, .generate-btn {
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .camera-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            flex: 0 0 48%;
+        }
+        
+        .generate-btn {
+            background: linear-gradient(135deg, #ff7676, #f54ea2);
+            flex: 0 0 48%;
+        }
+        
+        .camera-btn:hover, .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .result-section {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            display: none;
+        }
+        
+        .song-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .song-cover {
+            width: 80px;
+            height: 80px;
+            border-radius: 5px;
+            object-fit: cover;
+            margin-right: 15px;
+        }
+        
+        .song-details h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        
+        .song-details p {
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+        
+        .player-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .progress-container {
+            flex-grow: 1;
+            height: 5px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin: 0 15px;
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: #f54ea2;
+            border-radius: 5px;
+        }
+        
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        
+        .duration {
+            font-size: 12px;
+            color: #e0e0e0;
+        }
+        
+        .toggle-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .toggle-link {
+            color: #ffcc00;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        
+        .manual-section {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .emoji {
+            font-size: 24px;
+            margin-right: 5px;
+        }
+        
+        @media (max-width: 600px) {
+            .button-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .camera-btn, .generate-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Facial Expression Mood Song Generator</h1>
+        <p class="subtitle">Let us analyze your facial expression to find the perfect song for your mood!</p>
+        
+        <div class="camera-section">
+            <div class="camera-container">
+                <video id="video" playsinline autoplay></video>
+            </div>
+            <canvas id="canvas" width="320" height="240"></canvas>
+            <div id="camera-status" class="camera-status">Click "Start Camera" to begin</div>
+            
+            <div class="detected-mood">
+                <span>Detected Mood:</span>
+                <span id="detected-mood-value" class="detected-mood-value">None</span>
+                <span id="mood-emoji" class="emoji"></span>
+            </div>
+        </div>
+        
+        <div class="button-container">
+            <button id="camera-btn" class="camera-btn">Start Camera</button>
+            <button id="generate-btn" class="generate-btn">Find My Song</button>
+        </div>
+        
+        <div class="toggle-section">
+            <span class="toggle-link" id="toggle-manual">Or enter your mood manually</span>
+        </div>
+        
+        <div class="manual-section" id="manual-section">
+            <div class="input-section">
+                <label class="input-label" for="mood-input">How are you feeling today?</label>
+                <input type="text" id="mood-input" class="text-input" placeholder="Type your mood here (e.g., happy, sad, energetic)">
+                
+                <label class="input-label">Or select your mood:</label>
+                <div class="mood-buttons">
+                    <button class="mood-btn" data-mood="happy">Happy 😊</button>
+                    <button class="mood-btn" data-mood="sad">Sad 😢</button>
+                    <button class="mood-btn" data-mood="relaxed">Relaxed 😌</button>
+                    <button class="mood-btn" data-mood="energetic">Energetic 🤩</button>
+                    <button class="mood-btn" data-mood="romantic">Romantic 😍</button>
+                    <button class="mood-btn" data-mood="focused">Focused 🧐</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="result-section" class="result-section">
+            <div class="song-info">
+                <img id="song-cover" class="song-cover" src="/api/placeholder/80/80" alt="Song Cover">
+                <div class="song-details">
+                    <h3 id="song-title">Song Title</h3>
+                    <p id="song-artist">Artist</p>
+                    <p id="song-mood">Mood: </p>
+                </div>
+            </div>
+            
+            <audio id="audio-player"></audio>
+            
+            <div class="player-controls">
+                <button id="play-btn" class="control-btn">▶</button>
+                <div class="progress-container">
+                    <div id="progress-bar" class="progress-bar"></div>
+                </div>
+                <span id="duration" class="duration">0:00</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // This would typically be a database or API call in a real application
+        const songDatabase = {
+            happy: [
+                { title: "Happy", artist: "Pharrell Williams", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "Walking on Sunshine", artist: "Katrina & The Waves", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "Good Feeling", artist: "Flo Rida", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" }
+            ],
+            sad: [
+                { title: "Someone Like You", artist: "Adele", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "Fix You", artist: "Coldplay", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "Say You Love Me", artist: "Jessie Ware", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" }
+            ],
+            relaxed: [
+                { title: "Weightless", artist: "Marconi Union", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "Breathe", artist: "Télépopmusik", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "Dreams", artist: "Fleetwood Mac", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" }
+            ],
+            energetic: [
+                { title: "Can't Stop the Feeling", artist: "Justin Timberlake", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "Uptown Funk", artist: "Mark Ronson ft. Bruno Mars", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "Dance Monkey", artist: "Tones and I", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" }
+            ],
+            romantic: [
+                { title: "At Last", artist: "Etta James", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "All of Me", artist: "John Legend", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "Perfect", artist: "Ed Sheeran", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" }
+            ],
+            focused: [
+                { title: "Experience", artist: "Ludovico Einaudi", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "Time", artist: "Hans Zimmer", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "Brain Waves", artist: "Alpha Waves", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" }
+            ],
+            surprised: [
+                { title: "Wow", artist: "Post Malone", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "Thunderstruck", artist: "AC/DC", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "Surprise Yourself", artist: "Jack Garratt", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" }
+            ],
+            angry: [
+                { title: "Break Stuff", artist: "Limp Bizkit", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "Killing In The Name", artist: "Rage Against The Machine", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" },
+                { title: "Bulls On Parade", artist: "Rage Against The Machine", src: "https://cdnjs.cloudflare.com/ajax/libs/cld8/0.3.1/cld.min.js", cover: "/api/placeholder/80/80" }
+            ],
+        };
+        
+        // Additional moods mapped to our main categories
+        const moodMap = {
+            // Happy
+            "joyful": "happy", "cheerful": "happy", "excited": "happy", "content": "happy",
+            "ecstatic": "happy", "delighted": "happy", "pleased": "happy", "thrilled": "happy",
+            
+            // Sad
+            "depressed": "sad", "gloomy": "sad", "sorrowful": "sad", "melancholy": "sad",
+            "down": "sad", "blue": "sad", "unhappy": "sad", "heartbroken": "sad",
+            
+            // Relaxed
+            "calm": "relaxed", "peaceful": "relaxed", "tranquil": "relaxed", "serene": "relaxed",
+            "chill": "relaxed", "mellow": "relaxed", "zen": "relaxed", "composed": "relaxed",
+            
+            // Energetic
+            "lively": "energetic", "active": "energetic", "dynamic": "energetic", "spirited": "energetic",
+            "pumped": "energetic", "hyper": "energetic", "motivated": "energetic", "vigorous": "energetic",
+            
+            // Romantic
+            "loving": "romantic", "passionate": "romantic", "affectionate": "romantic", "tender": "romantic",
+            "dreamy": "romantic", "sentimental": "romantic", "passionate": "romantic", "nostalgic": "romantic",
+            
+            // Focused
+            "concentrated": "focused", "determined": "focused", "productive": "focused", "attentive": "focused",
+            "studious": "focused", "diligent": "focused", "absorbed": "focused", "intent": "focused",
+            
+            // Surprised
+            "shocked": "surprised", "amazed": "surprised", "astonished": "surprised", "stunned": "surprised",
+            "startled": "surprised", "bewildered": "surprised", "awestruck": "surprised",
+            
+            // Angry
+            "furious": "angry", "annoyed": "angry", "irritated": "angry", "frustrated": "angry",
+            "mad": "angry", "outraged": "angry", "enraged": "angry", "hostile": "angry"
+        };
+        
+        // Emoji mapping for detected moods
+        const moodEmojis = {
+            "happy": "😊",
+            "sad": "😢",
+            "relaxed": "😌",
+            "energetic": "🤩",
+            "romantic": "😍",
+            "focused": "🧐",
+            "surprised": "😲",
+            "angry": "😠",
+            "neutral": "😐"
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const cameraBtn = document.getElementById('camera-btn');
+            const cameraStatus = document.getElementById('camera-status');
+            const detectedMoodValue = document.getElementById('detected-mood-value');
+            const moodEmoji = document.getElementById('mood-emoji');
+            const moodInput = document.getElementById('mood-input');
+            const moodButtons = document.querySelectorAll('.mood-btn');
+            const generateBtn = document.getElementById('generate-btn');
+            const resultSection = document.getElementById('result-section');
+            const songCover = document.getElementById('song-cover');
+            const songTitle = document.getElementById('song-title');
+            const songArtist = document.getElementById('song-artist');
+            const songMood = document.getElementById('song-mood');
+            const audioPlayer = document.getElementById('audio-player');
+            const playBtn = document.getElementById('play-btn');
+            const progressBar = document.getElementById('progress-bar');
+            const duration = document.getElementById('duration');
+            const toggleManual = document.getElementById('toggle-manual');
+            const manualSection = document.getElementById('manual-section');
+            
+            let selectedMood = '';
+            let detectedMood = '';
+            let isPlaying = false;
+            let stream = null;
+            let isAnalyzing = false;
+            let faceDetectionInterval = null;
+            
+            // Toggle manual input section
+            toggleManual.addEventListener('click', () => {
+                if (manualSection.style.display === 'none' || manualSection.style.display === '') {
+                    manualSection.style.display = 'block';
+                    toggleManual.textContent = 'Hide manual input';
+                } else {
+                    manualSection.style.display = 'none';
+                    toggleManual.textContent = 'Or enter your mood manually';
+                }
+            });
+            
+            // Handle camera button click
+            cameraBtn.addEventListener('click', () => {
+                if (stream) {
+                    stopCamera();
+                    cameraBtn.textContent = 'Start Camera';
+                    cameraStatus.textContent = 'Camera stopped';
+                    detectedMoodValue.textContent = 'None';
+                    moodEmoji.textContent = '';
+                } else {
+                    startCamera();
+                }
+            });
+            
+            // Start camera and face detection
+            async function startCamera() {
+                try {
+                    cameraStatus.textContent = 'Requesting camera access...';
+                    
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            width: { ideal: 320 }, 
+                            height: { ideal: 240 },
+                            facingMode: 'user'
+                        }
+                    });
+                    
+                    video.srcObject = stream;
+                    cameraBtn.textContent = 'Stop Camera';
+                    cameraStatus.textContent = 'Analyzing facial expression...';
+                    
+                    // Wait for video to start playing
+                    video.onloadedmetadata = () => {
+                        startFaceDetection();
+                    };
+                    
+                } catch (err) {
+                    console.error('Error accessing camera:', err);
+                    cameraStatus.textContent = 'Error accessing camera. Please check permissions.';
+                }
+            }
+            
+            // Stop camera and face detection
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                
+                if (faceDetectionInterval) {
+                    clearInterval(faceDetectionInterval);
+                    faceDetectionInterval = null;
+                    
+                    isAnalyzing = false;
+                }
+            }
+            
+            // Start face detection process
+            function startFaceDetection() {
+                if (isAnalyzing) return;
+                isAnalyzing = true;
+                
+                // Simulate face detection with mood analysis
+                // In a real app, you would use a library like face-api.js, TensorFlow.js, or a cloud API
+                
+                faceDetectionInterval = setInterval(() => {
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Draw the current video frame to the canvas
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    // Simulate mood detection
+                    simulateMoodDetection();
+                }, 1000); // Update every second
+                
+                cameraStatus.textContent = 'Analyzing your expression...';
+            }
+            
+            // Simulate mood detection (in a real app, use actual facial expression recognition)
+            function simulateMoodDetection() {
+                // Array of possible moods
+                const moods = ['happy', 'sad', 'relaxed', 'energetic', 'focused', 'surprised', 'angry', 'neutral'];
+                
+                // Simulate mood changes occasionally
+                if (Math.random() < 0.3 || !detectedMood) {
+                    // Get a random mood
+                    const newMood = moods[Math.floor(Math.random() * moods.length)];
+                    
+                    // Update the detected mood display
+                    detectedMoodValue.textContent = newMood.charAt(0).toUpperCase() + newMood.slice(1);
+                    moodEmoji.textContent = moodEmojis[newMood] || '';
+                    
+                    // Store the detected mood
+                    detectedMood = newMood;
+                }
+            }
+            
+            // Handle mood button selection
+            moodButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    moodButtons.forEach(btn => btn.classList.remove('selected'));
+                    button.classList.add('selected');
+                    selectedMood = button.getAttribute('data-mood');
+                    moodInput.value = ''; // Clear text input when button is selected
+                });
+            });
+            
+            // Generate song based on mood
+            generateBtn.addEventListener('click', () => {
+                let mood = '';
+                
+                // First priority: manually selected mood
+                if (moodInput.value.trim() !== '') {
+                    const inputMood = moodInput.value.trim().toLowerCase();
+                    
+                    // Check if input mood is in our database directly
+                    if (songDatabase[inputMood]) {
+                        mood = inputMood;
+                    } 
+                    // Check if it's in our mood map
+                    else if (moodMap[inputMood]) {
+                        mood = moodMap[inputMood];
+                    } 
+                    // If we can't match it, use a simple algorithm to find the closest mood
+                    else {
+                        // Default to "happy" if no match
+                        mood = findSimilarMood(inputMood) || "happy";
+                    }
+                } 
+                // Second priority: mood button selection
+                else if (selectedMood) {
+                    mood = selectedMood;
+                }
+                // Third priority: detected facial expression
+                else if (detectedMood) {
+                    mood = detectedMood;
+                }
+                // Default
+                else {
+                    // Default to happy if no input
+                    mood = "happy";
+                }
+                
+                // If the mood is not supported, map to a supported one
+                if (!songDatabase[mood]) {
+                    mood = mapToSupportedMood(mood);
+                }
+                
+                // Get random song from the mood category
+                const songs = songDatabase[mood];
+                const randomSong = songs[Math.floor(Math.random() * songs.length)];
+                
+                // Display song info
+                songCover.src = randomSong.cover;
+                songTitle.textContent = randomSong.title;
+                songArtist.textContent = randomSong.artist;
+                songMood.textContent = `Mood: ${mood.charAt(0).toUpperCase() + mood.slice(1)}`;
+                
+                // Set audio source
+                audioPlayer.src = randomSong.src;
+                
+                // Show result section
+                resultSection.style.display = 'block';
+                
+                // Reset player controls
+                playBtn.textContent = '▶';
+                progressBar.style.width = '0%';
+                duration.textContent = '0:00';
+                isPlaying = false;
+                
+                // Simulate loading audio metadata
+                setTimeout(() => {
+                    // In a real app, this would come from the actual audio file
+                    const minutes = Math.floor(Math.random() * 3) + 2; // Random 2-4 minutes
+                    const seconds = Math.floor(Math.random() * 59); // Random 0-59 seconds
+                    duration.textContent = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+                }, 500);
+            });
+            
+            // Play/pause button functionality
+            playBtn.addEventListener('click', () => {
+                if (isPlaying) {
+                    playBtn.textContent = '▶';
+                    // In a real app: audioPlayer.pause();
+                    clearInterval(progressInterval); // Stop progress animation
+                } else {
+                    playBtn.textContent = '⏸';
+                    // In a real app: audioPlayer.play();
+                    simulatePlayback(); // Start progress animation
+                }
+                isPlaying = !isPlaying;
+            });
+            
+            // Map an unsupported mood to a supported one
+            function mapToSupportedMood(mood) {
+                // If it's in our mood map, use that mapping
+                if (moodMap[mood]) {
+                    return moodMap[mood];
+                }
+                
+                // Default mapping for uncommon moods
+                const defaultMappings = {
+                    "neutral": "relaxed",
+                    "confused": "focused",
+                    "disgusted": "angry",
+                    "afraid": "sad",
+                    "fearful": "sad"
+                };
+                
+                return defaultMappings[mood] || "happy"; // Default to happy
+            }
+            
+            // Simulating playback progress
+            let progressInterval;
+            function simulatePlayback() {
+                let progress = 0;
+                progressInterval = setInterval(() => {
+                    progress += 0.5;
+                    if (progress <= 100) {
+                        progressBar.style.width = `${progress}%`;
+                    } else {
+                        clearInterval(progressInterval);
+                        playBtn.textContent = '▶';
+                        isPlaying = false;
+                    }
+                }, 500); // Update every half second
+            }
+            
+            // Function to find similar mood using basic string matching
+            function findSimilarMood(inputMood) {
+                // Try direct mapping first
+                if (moodMap[inputMood]) {
+                    return moodMap[inputMood];
+            }
+            
+            // Check if the input mood contains any of our known moods
+            for (const knownMood in moodMap) {
+                if (inputMood.includes(knownMood) || knownMood.includes(inputMood)) {
+                    return moodMap[knownMood];
+                }
+            }
+            
+            // If no match found, return null (will be handled by default case later)
+            return null;
+        }
+    });
+</script>
+</body>
+</html>
+                
